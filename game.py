@@ -4,7 +4,7 @@ import keyboard
 import pyautogui
 import time
 import numpy as np
-
+from PIL import Image,ImageTk,ImageDraw
 
 def get_xy(xx,yy,zz):
 
@@ -32,17 +32,25 @@ def get_xy(xx,yy,zz):
 	return x,y
 
 
+main_im=[0,0,0,0]
+
 
 def main():
 	global can,ht,wd
 	global area,myloc,myloc_
 	global x_ang,y_ang
 	global point,pos
+	global main_im
 
 
-	can.delete("all")
+	main_im[0]=Image.new("RGBA",(wd,ht),(0,0,0,255))
+	main_im[1]=ImageDraw.Draw(main_im[0])
 
-	draw_floor()
+
+
+
+
+	#draw_floor()
 
 
 	xa,ya=get_xy(0,0,3)
@@ -50,7 +58,12 @@ def main():
 
 	#can.create_line(xa,ya, xb,yb, fill="cyan")
 
-	can.create_oval(wd/2-3,ht/2-3, wd/2+3,ht/2+3,outline="#ffffff")
+	#can.create_oval(wd/2-3,ht/2-3, wd/2+3,ht/2+3,outline="#ffffff")
+
+
+
+	#main_im[1].ellipse( ( (int(round(wd/2-3,0)),int(round(ht/2-3,0))),(int(round((wd/2+3,0))),int(round(ht/2+3,0)))),
+	#	outline="#ffffff")
 
 
 
@@ -140,12 +153,16 @@ def main():
 
 
 
-	draw_person([0.5,0.4],3,0, 0,0,0, 90,50,20, 0,0,0, 45,50,20, 0,0, 45,-90, 0,0, 45,-20 )
+	#draw_person([0.5,0.4],3,0, 0,0,0, -90,70,70, 0,0,0, 45,50,20, 0,0, 45,-90, 0,0, 45,-20 )
+	#draw_person([0.5,0.4],3,0, 0,0,0, 0,0,0, 0,0,0, 0,0,0, 0,0, 0,0, 0,0, 0,0 )
 
 
 
 	#try:
 
+	#draw_wall()
+
+	draw_cube()
 
 
 	l=[0.5,0.4]
@@ -164,13 +181,25 @@ def main():
 
 	x,y=p
 
-	can.delete(pos)
+	#can.delete(pos)
 
 
-	pos=can.create_line(0,0,x,y,fill="red")
+	#pos=can.create_line(0,0,x,y,fill="red")
 	#except:
 	#	pass
 
+
+
+
+
+	main_im[2]=ImageTk.PhotoImage(main_im[0])
+
+	if main_im[-1]==0:
+		can.delete("all")
+
+		main_im[-1]=can.create_image(0,0,image=main_im[2],anchor="nw")
+	else:
+		can.itemconfig(main_im[-1],image=main_im[2])
 points=[]
 def draw_points():
 
@@ -189,6 +218,9 @@ def draw_person(l,ht,face_ang, la1x,la2x,la3x, la1y,la2y,la3y, ra1x,ra2x,ra3x, r
 
 	xx=-area[0]*myloc[0]+area[0]*l[0]
 	zz=area[1]*myloc[1]-area[1]*l[1]+myloc_[-1]	
+
+	if zz<0:
+		return
 
 
 	p1=[xx,0+ht,zz]
@@ -366,44 +398,737 @@ def draw_person(l,ht,face_ang, la1x,la2x,la3x, la1y,la2y,la3y, ra1x,ra2x,ra3x, r
 	can.create_line(get_xy(*p19),get_xy(*p15),get_xy(*p16),get_xy(*p17),get_xy(*p18),fill="red")
 
 
+def draw_cube():
+	global area,myloc_,x_ang,y_ang,main_im
+
+	arp=[]
+
+	# bottom
+
+
+	ar=[(0,1,0),
+		(1,0,1),
+		(0,1,0)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]
 
 
 
 
 
-	p20=[xx-0.169/2*r,ht,zz]
-	p21=[xx-0.169/2*r,ht-0.23729*r,zz]	
+
+
+	for z in range(3):
+
+		x__=-area[0]*myloc[0]
 
 
 
-	p22=[xx+0.169/2*r,ht,zz]
-	p23=[xx+0.169/2*r,ht-0.23729*r,zz]
 
 
-	p20=rot(*p20,[xx,0,zz],face_ang,0)
-	p20=rot(*p20,myloc_,x_ang,y_ang)
 
-	p21=rot(*p21,[xx,0,zz],face_ang,0)
-	p21=rot(*p21,myloc_,x_ang,y_ang)
+		for x in range(3):
 
+			ar2=[]
 
-	p22=rot(*p22,[xx,0,zz],face_ang,0)
-	p22=rot(*p22,myloc_,x_ang,y_ang)
+			d_=[]
 
-
-	p23=rot(*p23,[xx,0,zz],face_ang,0)
-	p23=rot(*p23,myloc_,x_ang,y_ang)
+			con=0
 
 
-	can.create_line(get_xy(*p20),get_xy(*p21),fill="yellow")
-	can.create_line(get_xy(*p22),get_xy(*p23),fill="yellow")
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__+p[0],0,z__-p[1],myloc_,x_ang,y_ang)
+
+				if zz<0:
+
+
+					con=1
+
+					break
+
+
+
+				_x,_y=get_xy(xx,yy,zz)
+
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+
+
+
+
+
+
+
+				colx=ar[z][x]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				ar2.append(col)
+
+
+
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+			
+
+
+
+
+
+
+			x__+=1
+
+
+		z__-=1
+
+
+
+
+	# top
+
+
+
+
+
+
+
+
+	ar=[(0,1,0),
+		(1,0,0),
+		(0,0,0)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]
+
+
+
+
+	for z in range(3):
+
+		x__=-area[0]*myloc[0]
+
+
+		con=0
+
+
+
+
+
+
+		for x in range(3):
+
+			ar2=[]
+
+			d_=[]
+
+
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__+p[0],3,z__-p[1],myloc_,x_ang,y_ang)
+
+				if zz<0:
+
+					con=1
+					break
+
+				_x,_y=get_xy(xx,yy,zz)
+
+
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+				colx=ar[z][x]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				print(colx)
+
+				ar2.append(col)
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+				
+
+
+
+
+
+
+			x__+=1
+
+
+		z__-=1
+
+
+
+	# front
+
+
+	ar=[(1,0,0),
+		(0,0,0),
+		(0,0,1)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]
+
+	y__=3
+
+
+
+
+	for y in range(3):
+
+		x__=-area[0]*myloc[0]
+
+
+		con=0
+
+
+
+
+
+
+
+		for x in range(3):
+
+			ar2=[]
+
+
+			d_=[]
+
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__+p[0],y__-p[1],z__,myloc_,x_ang,y_ang)
+
+				if zz<0:
+					con=1
+					break
+
+				_x,_y=get_xy(xx,yy,zz)
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+
+
+
+
+
+				colx=ar[y][x]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				print(colx)
+
+				ar2.append(col)
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+				
+
+
+
+
+
+
+			x__+=1
+
+
+		y__-=1
+
+
+	#back
+
+
+	ar=[(0,0,0),
+		(0,1,0),
+		(0,0,0)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]-3
+
+	y__=3
+
+
+
+
+	for y in range(3):
+
+		x__=-area[0]*myloc[0]
+
+
+		con=0
+
+
+
+
+
+
+		for x in range(3):
+
+			ar2=[]
+
+
+			d_=[]
+
+
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__+p[0],y__-p[1],z__,myloc_,x_ang,y_ang)
+
+				if zz<0:
+
+					con=1
+					break
+
+				_x,_y=get_xy(xx,yy,zz)
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+
+
+				colx=ar[y][x]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				print(colx)
+
+				ar2.append(col)
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+			
+
+
+
+
+
+
+			x__+=1
+
+
+		y__-=1
+
+
+
+
+	#right
+
+
+	ar=[(0,1,0),
+		(0,1,0),
+		(0,1,0)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]
+
+	x__=-area[0]*myloc[0]+3
+
+
+	for z in range(3):
+
+
+		y__=3
+
+
+		con=0
+
+		
+
+
+
+
+
+
+		for y in range(3):
+
+			ar2=[]
+
+			d_=[]
+
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__,y__-p[0],z__-p[1],myloc_,x_ang,y_ang)
+
+				if zz<0:
+
+					con=1
+					break
+
+				_x,_y=get_xy(xx,yy,zz)
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+
+
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+
+
+				colx=ar[z][y]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				print(colx)
+
+				ar2.append(col)
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+				
+
+
+
+
+
+
+			y__-=1
+
+
+		z__-=1
+
+
+
+
+
+	#right
+
+
+	ar=[(0,1,0),
+		(0,0,1),
+		(0,0,0)]
+
+
+
+
+	z__=area[1]*myloc[1]+myloc_[-1]
+
+	x__=-area[0]*myloc[0]
+
+
+	for z in range(3):
+
+
+		y__=3
+
+		con=0
+
+		
+
+
+
+
+
+
+		for y in range(3):
+
+			ar2=[]
+
+
+			d_=[]
+			for p in [(0,0),(1,0),(1,1),(0,1)]:
+			
+				xx,yy,zz=rot(x__,y__-p[0],z__-p[1],myloc_,x_ang,y_ang)
+
+				if zz<0:
+
+					con=1
+					break
+
+				_x,_y=get_xy(xx,yy,zz)
+
+
+
+
+				ar2.append(_x)
+				ar2.append(_y)
+
+
+
+
+
+				xx2,yy2,zz2=myloc_
+
+
+				d=math.sqrt(((xx)-xx2)**2+((yy)-yy2)**2+((zz)-zz2)**2)
+
+				d_.append(d)
+
+
+			if con==0:
+
+
+
+				sm=0
+
+				for d in d_:
+
+					sm+=d
+
+
+				av=sm/len(d_)
+
+
+
+
+
+				colx=ar[z][y]
+
+				if colx==1:
+
+					col="#555555"
+				else:
+
+					col="#ffffff"
+
+
+				print(colx)
+
+				ar2.append(col)
+
+
+
+				arp.append([*ar2,av])
+
+
+
+
+
+				
+
+
+
+
+
+
+			y__-=1
+
+
+		z__-=1
+
+
+
+
+
+	ar=sorted(arp,key=lambda x:x[-1],reverse=True)
+
+
+	for p in ar:
+		#print(p[-2])
+
+		main_im[1].polygon(p[:-2],fill=p[-2],outline="#000000")
+
+
+
+
+	
+
+
+
 
 
 
 def draw_floor():
 	global gnd,area,myloc,myloc_
 	global x_ang,y_ang
-
+	global main_im
 
 	tile_x,tile_y=1,1   #in meters
 
@@ -446,8 +1171,8 @@ def draw_floor():
 				if zz<0:
 					zst=1
 
-				ar.append(_x)
-				ar.append(_y)
+				ar.append((int(round(_x,0)),int(round(_y,0))))
+
 
 			#print(ar)
 
@@ -456,17 +1181,27 @@ def draw_floor():
 			c2=0
 			c3=0
 			c_=1
-			for _ in range(len(ar)):
 
-				if ar[_]<0:
+			ar2=[]
+
+			for i in ar:
+
+				ar2.append(i[0])
+				ar2.append(i[1])
+
+			for _ in range(len(ar2)):
+
+
+
+				if ar2[_]<0:
 					c+=1
 
 				if c_%2==0:
-					if ar[_]<0:
+					if ar2[_]<0:
 						c2+=1
 
 				else:
-					if ar[_]<0:
+					if ar2[_]<0:
 						c3+=1
 
 
@@ -480,7 +1215,8 @@ def draw_floor():
 				if zst==0:
 
 
-					can.create_polygon(ar,fill="#222222",outline="#666666")
+					#can.create_polygon(ar,fill="#222222",outline="#666666")
+					main_im[1].polygon(ar,fill="#222222",outline="#666666")
 
 			xv+=tile_x
 
@@ -495,20 +1231,108 @@ def draw_floor():
 
 def draw_wall():
 
-
 	global gnd,area,myloc,myloc_
 	global x_ang,y_ang
-
+	global main_im
 
 	tile_x,tile_y=1,1   #in meters
 
 	
 
 
-	n_xtile=area[0]/tile_x
-	n_ytile=5/tile
+	n_xtile=area[0]*0.4/tile_x
+	n_ytile=area[1]*0.5/tile_y
 
-	
+
+
+
+
+	yv=area[1]*myloc[1]+myloc_[-1]-area[1]*0.05
+
+	zst=0
+
+	for y in range(int(n_ytile)):
+
+		xv=-area[0]*myloc[0]+area[0]*0.55
+
+
+		for x in range(int(n_xtile)):
+
+
+
+			
+			ar=[]
+			a=[[0,0],[1,0],[1,1],[0,1]]
+
+			zst=0
+
+			
+
+
+			for x_ in a:
+
+				xx,yy,zz=rot(xv+x_[0]*tile_x,0,yv-x_[1]*tile_y,myloc_,x_ang,y_ang)
+
+				#print(xv+x_[0]*tile_x,0,yv-x_[1]*tile_y)
+
+				_x,_y=get_xy(xx,yy,zz)
+
+				if zz<0:
+					zst=1
+
+				ar.append((int(round(_x,0)),int(round(_y,0))))
+
+
+			#print(ar)
+
+
+			c=0
+			c2=0
+			c3=0
+			c_=1
+
+			ar2=[]
+
+			for i in ar:
+
+				ar2.append(i[0])
+				ar2.append(i[1])
+
+			for _ in range(len(ar2)):
+
+
+
+				if ar2[_]<0:
+					c+=1
+
+				if c_%2==0:
+					if ar2[_]<0:
+						c2+=1
+
+				else:
+					if ar2[_]<0:
+						c3+=1
+
+
+				c_+=1
+
+
+			
+			if not c2==4:
+
+
+				if zst==0:
+
+
+					#can.create_polygon(ar,fill="#222222",outline="#666666")
+					main_im[1].polygon(ar,fill="#ff0000",outline="#666666")
+
+			xv+=tile_x
+
+
+		#if yv<0:
+		#	break#
+		yv-=tile_y
 
 
 
@@ -592,12 +1416,12 @@ def check_keys():
 
 	if keyboard.is_pressed('r'):
 		myloc_[1]+=0.5
-		gnd=-ht/2*myloc_[1]/1.7
+		gnd=-ht/2*myloc_[1]
 		main()
 
 	if keyboard.is_pressed('f'):
 		myloc_[1]-=0.5
-		gnd=-ht/2*myloc_[1]/1.7
+		gnd=-ht/2*myloc_[1]
 		main()
 
 
@@ -707,7 +1531,9 @@ root=tk.Tk()
 wd=int(root.winfo_screenwidth())
 ht=int(root.winfo_screenheight())
 
-root.wm_attributes("-fullscreen",1)
+root.geometry(f"{wd}x{ht}+0+0")
+
+#root.wm_attributes("-fullscreen",1)
 
 
 
@@ -734,62 +1560,49 @@ def can_b1(e):
 	can.focus_set()
 
 
-can=tk.Canvas(width=wd,height=ht,relief="flat",highlightthickness=0,border=0,bg="skyblue")
-can.place(in_=root,x=0,y=0)
 
-can.bind("<Button-1>",can_b1)
+def can_b3(e):
+	global head
 
+	if len(head)>=4:
 
+		print("\nxxx\n")
 
+		for _ in head[-4:]:
 
-pos=0
-point=[0,3,0]
-
-def en_r(e):
-
-	global pos,can
-	global area,myloc,myloc_
-	global en
-	global point
-	global can
+			print(_)
 
 
-
-	x,y,z=en.get().split(",")
-
-	x=float(x)
-	y=float(y)
-	z=float(z)
+		print("\nxxx\n")
 
 
+pst=1
+def can_r(e):
 
-	point=[x,y,z]
+	global pst
 
-	can.focus_set()
+	if pst==0:
+		pst=1
+	elif pst==1:
+		pst=0
 
 
 	main()
 
 
 
+can=tk.Canvas(width=wd,height=ht,relief="flat",highlightthickness=0,border=0,bg="#000000")
+can.place(in_=root,x=0,y=0)
+
+can.bind("<Return>",can_r)
+
+can.bind("<Button-1>",can_b1)
+can.bind("<Button-3>",can_b3)
 
 
 
-def en_b1(e):
-
-	en.focus_set()
-
-en=tk.Entry(bg="#ffffff",font=("FreeMono",14),width=50)
-en.place(in_=root,x=20,y=ht-50)
-en.bind("<Return>",en_r)
-en.bind("<Button-1>",en_b1)
-
-
-en2=tk.Entry(bg="#ffffff",font=("FreeMono",14),width=50)
-en2.place(in_=root,x=700,y=ht-50)
-
-
-
+pos=0
+point=[0,3,0]
 
 head=[]
 
